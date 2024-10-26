@@ -1,0 +1,42 @@
+# Archivos y carpetas de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+
+# Entornos virtuales y dependencias
+venv/
+env/
+.venv/
+.env/
+.myenv/
+Lib/
+site-packages/
+
+# Archivos de configuración de IDEs y editores de texto
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de registro y caché
+*.log
+*.cache
+*.pytest_cache/
+*.coverage
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno
+*.env
+
+# Archivos creados por PyInstaller (si usas para empaquetar la app)
+dist/
+build/
+*.spec
+
+# Archivos de configuración personal
+config.json
