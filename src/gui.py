@@ -3,7 +3,7 @@ from tkinter import ttk
 import pandas as pd
 
 
-from data.paths import ICON_PATH, REPORT_NAME
+from data.paths import ICON_PATH, REPORT_NAME_2
 from data.index import platforms
 from utils.main import uploadBesi, uploadBom, calculateReport, exportReport, exportPdfReport, uploadLx02, calculateReport2, uploadMData
 
@@ -307,12 +307,12 @@ def createGui():
     report2_buttons.pack(side="top", pady=10)
 
     #Añadir botón para descargar excel
-    boton_cargar_bom = ttk.Button(report2_buttons, text="DESCARGAR .xlsx", command=lambda: exportReport(reportDf))
+    boton_cargar_bom = ttk.Button(report2_buttons, text="DESCARGAR .xlsx", command=lambda: exportReport(report2Df,REPORT_NAME_2))
     boton_cargar_bom.pack(side="left", padx=10)
 
-    #Añadir botón para descargar pdf
-    boton_cargar_bom = ttk.Button(report2_buttons, text="DESCARGARR .pdf", command=lambda: exportPdfReport(reportDf))
-    boton_cargar_bom.pack(side="left", padx=10)
+    # #Añadir botón para descargar pdf
+    # boton_cargar_bom = ttk.Button(report2_buttons, text="DESCARGARR .pdf", command=lambda: exportPdfReport(reportDf))
+    # boton_cargar_bom.pack(side="left", padx=10)
 
     # Crear etiquetas para mostrar el número de filas en cada pestaña
     row_count_label_besi = tk.Label(besi_book, text="Número de filas BESI: 0", font=("Arial", 10))
