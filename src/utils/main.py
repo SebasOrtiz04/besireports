@@ -7,7 +7,7 @@ import os
 from tkinter import filedialog, messagebox, simpledialog
 from tkinter import ttk
 from data.index import platforms
-from data.paths import REPORT_NAME, PDF_REPORT_NAME, IMAGE_PATH
+from data.paths import REPORT_NAME, PDF_REPORT_NAME, IMAGE_PATH,REPORT_NAME_2
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, PageBreak
 from reportlab.lib.pagesizes import landscape, letter
@@ -73,7 +73,7 @@ def uploadBesi(root, contenedor_botones):
     expected_headers = ['TME', 'Noparte']
 
     # Seleccionar archivo
-    archivo = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
+    archivo = filedialog.askopenfilename(title='Subir BESI',filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
 
     # Configurar el estilo personalizado para la barra de progreso
     style = ttk.Style(root)  
@@ -97,7 +97,7 @@ def uploadBesi(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 10  # 25%
             root.update()
-            time.sleep(0.1)
+            time.sleep(0.03)
             
             # Cargar el archivo Excel en un DataFrame
             df = pd.read_excel(archivo, header=0)
@@ -105,7 +105,7 @@ def uploadBesi(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 20  # 25%
             root.update()
-            time.sleep(0.1)
+            time.sleep(0.03)
 
             # Asegurar que los encabezados sean strings y eliminar espacios en blanco
             df.columns = df.columns.map(lambda x: str(x).strip())
@@ -114,13 +114,13 @@ def uploadBesi(root, contenedor_botones):
 
                 progress_bar['value'] = 40  # 75%
                 root.update()
-                time.sleep(0.1)
+                time.sleep(0.03)
 
                 # Aplicar los filtros
                 df = platformFilter(df)
                 progress_bar['value'] = 60  # 75%
                 root.update()
-                time.sleep(0.1)
+                time.sleep(0.03)
 
                 df = cookBesi(df)
                 progress_bar['value'] = 100  # 100%
@@ -139,7 +139,7 @@ def uploadBesi(root, contenedor_botones):
             root.update()
             messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
         finally:
-            time.sleep(0.1)
+            time.sleep(0.03)
             progress_bar.destroy()
             root.update()
     else:
@@ -167,7 +167,7 @@ def uploadBom(root, contenedor_botones):
     ]
 
     # Seleccionar archivo
-    archivo = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
+    archivo = filedialog.askopenfilename(title='Subir BOM',filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
 
     # Configurar el estilo personalizado para la barra de progreso
     style = ttk.Style(root)  
@@ -191,7 +191,7 @@ def uploadBom(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 10  # 25%
             root.update()
-            time.sleep(0.1)
+            time.sleep(0.03)
             
             # Cargar el archivo Excel en un DataFrame
             df = pd.read_excel(archivo, header=1)
@@ -199,7 +199,7 @@ def uploadBom(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 20  # 25%
             root.update()
-            time.sleep(0.1)
+            time.sleep(0.03)
 
             # Asegurar que los encabezados sean strings y eliminar espacios en blanco
             df.columns = df.columns.map(lambda x: str(x).strip())
@@ -212,13 +212,13 @@ def uploadBom(root, contenedor_botones):
 
                 progress_bar['value'] = 40  # 75%
                 root.update()
-                time.sleep(0.1)
+                time.sleep(0.03)
 
                 # # Aplicar los filtros
                 # df = platformFilter(df)
                 # progress_bar['value'] = 60  # 75%
                 # root.update()
-                # time.sleep(0.1)
+                # time.sleep(0.03)
 
                 progress_bar['value'] = 100  # 100%
                 root.update()
@@ -236,7 +236,198 @@ def uploadBom(root, contenedor_botones):
             root.update()
             messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
         finally:
-            time.sleep(0.1)
+            time.sleep(0.03)
+            progress_bar.destroy()
+            root.update()
+    else:
+        progress_bar.stop()
+        progress_bar.destroy()
+        root.update()
+
+#--------------------------------------------------------------
+def uploadLx02(root, contenedor_botones):
+
+    # Encabezados esperados
+    expected_headers = [
+        'Material',
+        'Centro',
+        'Almacén',
+        'Texto breve de material',
+        'Tipo almacén',
+        'Ubicación',
+        'Stock disponible',
+        'Unidad medida base',	
+        'Fecha EM',
+        'Unidad almacén',
+        'Stock salida almacén',
+        'Stock a entrar'
+    ]
+
+    warehouseTypes = [
+        14,
+        12,
+        901,
+        902,
+        917,
+        922,
+        921,
+    ]
+
+    # Seleccionar archivo
+    archivo = filedialog.askopenfilename(title='Subir LX02',filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
+
+    # Configurar el estilo personalizado para la barra de progreso
+    style = ttk.Style(root)  
+    
+    style.configure("my.Horizontal.TProgressbar", 
+                    troughcolor='white',  
+                    background='red',    
+                    thickness=10)         
+
+    # Crear la barra de progreso en modo determinate
+    progress_bar = ttk.Progressbar(contenedor_botones, 
+                                   style="my.Horizontal.TProgressbar", 
+                                   mode='determinate', 
+                                   length=200)
+    progress_bar.pack(side="left", padx=10)
+    progress_bar['value'] = 0  # Inicializa la barra a 0%
+    root.update()
+
+    if archivo:
+        try:
+            # Aumentar el valor de la barra de progreso
+            progress_bar['value'] = 10  # 25%
+            root.update()
+            time.sleep(0.03)
+            
+            # Cargar el archivo Excel en un DataFrame
+            df = pd.read_excel(archivo, header=0)
+
+            # Aumentar el valor de la barra de progreso
+            progress_bar['value'] = 20  # 25%
+            root.update()
+            time.sleep(0.03)
+
+            # Asegurar que los encabezados sean strings y eliminar espacios en blanco
+            df.columns = df.columns.map(lambda x: str(x).strip())
+            # Limpiar encabezados (reemplazar saltos de línea y quitar espacios)
+            df.columns = df.columns.str.replace('\n', ' ')  # Reemplazar saltos de línea con espacio
+            df.columns = df.columns.str.strip()  # Eliminar espacios al inicio y final
+
+
+            if set(expected_headers).issubset(df.columns):
+
+                progress_bar['value'] = 40  # 75%
+                root.update()
+                time.sleep(0.03)
+                df = df[df['Tipo almacén'].isin(warehouseTypes)]
+
+                progress_bar['value'] = 100  # 100%
+                root.update()
+
+                return df
+            
+            else:
+                progress_bar['value'] = 100  # 100%
+                root.update()
+                messagebox.showwarning("Advertencia", "El archivo no contiene el formato correcto")
+                return None
+
+        except Exception as e:
+            progress_bar['value'] = 100  # 100%
+            root.update()
+            messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
+        finally:
+            time.sleep(0.03)
+            progress_bar.destroy()
+            root.update()
+    else:
+        progress_bar.stop()
+        progress_bar.destroy()
+        root.update()
+
+#--------------------------------------------------------------
+def uploadMData(root, contenedor_botones):
+
+    # Encabezados esperados
+    expected_headers = [
+        'NP SAS',
+        'NP VW',
+        'Description',
+        'Tipo de almacenamiento',
+        'Supplier',
+        'Planner',
+        'Origin',
+        'Politica  VWM',
+        'Costo usd'
+    ]
+
+    # Seleccionar archivo
+    archivo = filedialog.askopenfilename(title='Subir Mastar Data',filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
+
+    # Configurar el estilo personalizado para la barra de progreso
+    style = ttk.Style(root)  
+    
+    style.configure("my.Horizontal.TProgressbar", 
+                    troughcolor='white',  
+                    background='red',    
+                    thickness=10)         
+
+    # Crear la barra de progreso en modo determinate
+    progress_bar = ttk.Progressbar(contenedor_botones, 
+                                   style="my.Horizontal.TProgressbar", 
+                                   mode='determinate', 
+                                   length=200)
+    progress_bar.pack(side="left", padx=10)
+    progress_bar['value'] = 0  # Inicializa la barra a 0%
+    root.update()
+
+    if archivo:
+        try:
+            # Aumentar el valor de la barra de progreso
+            progress_bar['value'] = 10  # 25%
+            root.update()
+            time.sleep(0.03)
+            
+            # Cargar el archivo Excel en un DataFrame
+            df = pd.read_excel(archivo, header=0)
+
+            # Aumentar el valor de la barra de progreso
+            progress_bar['value'] = 20  # 25%
+            root.update()
+            time.sleep(0.03)
+
+
+            # Asegurar que los encabezados sean strings y eliminar espacios en blanco
+            df.columns = df.columns.map(lambda x: str(x).strip())
+
+            # Limpiar encabezados (reemplazar saltos de línea y quitar espacios)
+            df.columns = df.columns.str.replace('\n', ' ')  # Reemplazar saltos de línea con espacio
+            df.columns = df.columns.str.strip()  # Eliminar espacios al inicio y final
+
+            if set(expected_headers).issubset(df.columns):
+
+                progress_bar['value'] = 40  # 75%
+                root.update()
+                time.sleep(0.03)
+
+                progress_bar['value'] = 100  # 100%
+                root.update()
+
+                return df
+            
+            else:
+                progress_bar['value'] = 100  # 100%
+                root.update()
+                messagebox.showwarning("Advertencia", "El archivo no contiene el formato correcto")
+                return None
+
+        except Exception as e:
+            progress_bar['value'] = 100  # 100%
+            root.update()
+            messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
+        finally:
+            time.sleep(0.03)
             progress_bar.destroy()
             root.update()
     else:
@@ -391,6 +582,7 @@ def calculateReport(besiDf,bomDf):
     
     return reportDf
 
+#----------------------------------------------------------------------------------------------
 def openFile(fileName):
     
     time.sleep(1)  # Esperar 1 segundo
@@ -403,7 +595,7 @@ def openFile(fileName):
     return 
 
 #-----------------------------------------------------------------
-def exportReport(reportDf):
+def exportReport(reportDf, REPORT_NAME = REPORT_NAME):
 
     if reportDf is None:
         messagebox.showwarning("Advertencia", "No se ha generado un reporte")
@@ -579,3 +771,178 @@ def exportPdfReport(reportDf):
         return
 
     openFile(REPORT_NAME)
+
+#-------------------------------------------------------------------
+def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
+    
+    # Configurar el estilo personalizado para la barra de progreso
+    style = ttk.Style(root)  
+    
+    style.configure("my.Horizontal.TProgressbar", 
+                    troughcolor='white',  
+                    background='red',    
+                    thickness=10)         
+
+    # Crear la barra de progreso en modo determinate
+    progress_bar = ttk.Progressbar(contenedor_botones, 
+                                   style="my.Horizontal.TProgressbar", 
+                                   mode='determinate', 
+                                   length=200)
+    progress_bar.pack(side="left", padx=10)
+    progress_bar['value'] = 0  # Inicializa la barra a 0%
+    root.update()
+    
+    # Extraer los encabezadois con formato de fecha
+    dateHeaders = getDateHeaders(besiDf)
+
+    # Definición de encabezados estáticos
+    staticHeaders = [
+        "NP SAS", "NP VW", "Description", "Supplier", "Planner", 
+        "Origin", "Stock On Hand In Plant", "Days On Hand In Plant", 
+        "DOH", "Politica  VWM"
+    ]
+    # Se guarda el número de encabezados
+    headersLen = len(staticHeaders)
+
+    # Se cálcula el paso para el loader en la iteración
+    mDataLen = len(mDataDf)
+    loadStep = 90 / mDataLen
+
+    #Cálcular los días inhábiles
+    probeDf = besiDf[besiDf['Noparte'] == '5NM857003FFLG']
+    disabledDays = []
+    for header in dateHeaders:
+        #Cálcular días inhábiles basado en no parte general 857003
+        dayRequeriment = sum(probeDf[header].to_list())
+        disabledDays.append(False if dayRequeriment == 0 else True)
+
+    # Se crea un array eliminando los dós últimos encabezados estáticos
+    cookedHeaders = staticHeaders[0:headersLen - 2]
+
+    # Se insertan los encabezados para los requerimientos del besi por día
+    for header in dateHeaders:
+        cookedHeaders.append(f"BESI {header}")
+
+    # Se insertan los encabezados para el restante de piezasa despues del día
+    for header in dateHeaders:
+        cookedHeaders.append(f"Before {header}")
+
+    # Se insertan los encabezados para el DOH Díario
+    for header in dateHeaders:
+        cookedHeaders.append(f"DOH {header}")
+
+    # Se agregan los dos útimos ecabezados estáticos
+    cookedHeaders = cookedHeaders + staticHeaders[headersLen - 2: headersLen]
+
+    # Se aseguras hacer una lista contable
+    reportHeaders = list(dict.fromkeys(cookedHeaders))
+
+    # Se crea el dataframe del reporte 
+    report2Df = pd.DataFrame(columns=reportHeaders)
+    
+    # Se crea un array para las filas
+    filas = []
+    
+    progress_bar['value'] = 10  # Inicializa la barra a 0%
+    root.update()
+    time.sleep(0.03)
+
+    try:
+        # Se recorre el Master Data
+        for i, row in mDataDf.iterrows():
+
+            # Setear numeros de parte
+            vwNumberPart = row['NP SAS']
+            sasNumberPart = row['NP VW']
+
+            # Asignar descripción
+            description = row['Description']
+
+            # Asignar Supplier
+            supplier = row['Supplier']
+
+            # Asignar Planner
+            planner = row['Planner']
+
+            # Asignar Origin
+            origin = row['Origin']
+
+            # Extraer las filas que correspondan al número de parte
+            besiFiltered = besiDf[besiDf['Noparte'] == vwNumberPart]
+            lx02Filtered = lx02Df[lx02Df['Material'] == sasNumberPart]
+
+            # Asignar tipo de almacenamiento
+            storageType = row['Tipo de almacenamiento']
+
+            if storageType == 'rack':
+                lx02Filtered = lx02Filtered[lx02Filtered['Tipo almacén'] == 921]
+                print(lx02Filtered)
+
+            # Cálcular el inventario existente
+            stockOnHandInPlant = sum(lx02Filtered['Stock disponible'].to_list())
+            
+            # Asignar Politica de VWM
+            vwPolicy = row['Politica  VWM']
+
+            newRow = {
+                "NP SAS":sasNumberPart,
+                "NP VW":vwNumberPart,
+                "Description":description,
+                "Supplier":supplier,
+                "Planner":planner,
+                "Origin":origin,
+                "Stock On Hand In Plant":stockOnHandInPlant,
+                "Politica  VWM":vwPolicy,
+            }
+
+            doh = 0
+
+            
+            for index, dateHader in enumerate(dateHeaders):
+
+                #Cálcula el requerimiendo del besi por número de parte
+                besiHeader = f"BESI {dateHader}"
+                dayRequeriment = sum(besiFiltered[dateHader].to_list()) 
+                newRow[besiHeader] = dayRequeriment
+                
+                #Cálcula el restante despues del día
+                beforeHeader = f"Before {dateHader}"
+                stockOnHandInPlant -= dayRequeriment
+                newRow[beforeHeader] = stockOnHandInPlant
+                
+                #Cálcula el restante despues del día
+                dohHeader = f"DOH {dateHader}"
+
+                if stockOnHandInPlant > 0 and dayRequeriment > 0 and dayRequeriment <= stockOnHandInPlant:
+                    doh = doh + 1 
+
+                if stockOnHandInPlant > 0 and dayRequeriment > stockOnHandInPlant:
+                    doh = doh + ( stockOnHandInPlant / dayRequeriment)
+
+                newRow[dohHeader] = doh
+            
+                newRow['DOH'] = round(doh, 2)
+                newRow['Days On Hand In Plant'] = round(doh, 2)
+            
+            progress_bar['value'] = progress_bar['value'] + loadStep
+            root.update()
+            time.sleep(0.03)
+
+            filas.append(newRow)
+
+        report2Df = pd.concat([report2Df, pd.DataFrame(filas)], ignore_index=True)
+        
+        progress_bar['value'] = 100  
+        root.update()
+        time.sleep(0.03)
+
+        exportReport(report2Df, REPORT_NAME_2)
+        
+        return report2Df
+    except Exception as e:
+        progress_bar['value'] = 100  # 100%
+        root.update()
+        messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
+    finally:
+        progress_bar.destroy()
+        root.update()

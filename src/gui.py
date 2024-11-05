@@ -5,17 +5,53 @@ import pandas as pd
 
 from data.paths import ICON_PATH, REPORT_NAME
 from data.index import platforms
-from utils.main import uploadBesi, uploadBom, calculateReport, exportReport, exportPdfReport
+from utils.main import uploadBesi, uploadBom, calculateReport, exportReport, exportPdfReport, uploadLx02, calculateReport2, uploadMData
 
 # Etiquetas para mostrar el número de filas en cada pestaña
 row_count_label_besi = None
 row_count_label_bom = None
+row_count_label_lx02 = None
+row_count_label_mData = None
 row_count_label_report = None
+row_count_label_report2 = None
 
 #Dataframes de archivos
 besiDf = None
 bomDf = None
+lx02Df = None
+mDataDf = None
 reportDf = None
+report2Df = None
+
+#-------------------------------------------------------------------
+def createReport2(root, report2_treeview, notebook, contenedor_botones):
+
+    global report2Df, besiDf, reportDf, mDataDf, lx02Df
+
+    if besiDf is None or lx02Df is None or reportDf is None or mDataDf is None:
+        return
+
+    
+    report2Df = calculateReport2(root, contenedor_botones, besiDf,lx02Df, mDataDf)
+        
+    if report2Df is None:
+        return
+        
+    notebook.select(5)
+    
+    for i in report2_treeview.get_children():
+        report2_treeview.delete(i)
+
+    report2_treeview["columns"] = list(report2Df.columns)
+    report2_treeview["show"] = "headings"
+
+    for col in report2Df.columns:
+        report2_treeview.heading(col, text=col)
+
+    for _, row in report2Df.iterrows():
+        report2_treeview.insert("", "end", values=list(row))
+
+    row_count_label_report2.config(text=f"Número de filas REPORTE: {len(report2Df)}")
 
 #-------------------------------------------------------------------
 def createReport(report_treeview, notebook):
@@ -33,7 +69,7 @@ def createReport(report_treeview, notebook):
     if reportDf is None:
         return
         
-    notebook.select(2)
+    notebook.select(4)
     
     for i in report_treeview.get_children():
         report_treeview.delete(i)
@@ -50,8 +86,6 @@ def createReport(report_treeview, notebook):
     row_count_label_report.config(text=f"Número de filas REPORTE: {len(reportDf)}")
 
     exportPdfReport(reportDf)
-
-    
 
 #-------------------------------------------------------------------
 def besiToDf(root, contenedor_botones, besi_treeview, notebook, report_treeview):
@@ -103,9 +137,57 @@ def bomToDf(root, contenedor_botones, bom_treeview, notebook, report_treeview):
     
     createReport(report_treeview, notebook)
 
+#------------------------------------------------------------------------
+def lx02ToDf(root, contenedor_botones, lx02_treeview, notebook):
+    notebook.select(2)
+    
+    global row_count_label_lx02, lx02Df
+    
+    lx02Df = uploadLx02(root, contenedor_botones)
+
+    if lx02Df is not None:
+        for i in lx02_treeview.get_children():
+            lx02_treeview.delete(i)
+
+        lx02_treeview["columns"] = list(lx02Df.columns)
+        lx02_treeview["show"] = "headings"
+
+        for col in lx02Df.columns:
+            lx02_treeview.heading(col, text=col)
+
+        for _, row in lx02Df.iterrows():
+            lx02_treeview.insert("", "end", values=list(row))
+
+        row_count_label_lx02.config(text=f"Número de filas LX02: {len(lx02Df)}")
+
+#------------------------------------------------------------------------
+def mDataToDf(root, contenedor_botones, mData_treeview, notebook, report2_treeview):
+    notebook.select(3)
+    
+    global row_count_label_mData, mDataDf
+    
+    mDataDf = uploadMData(root, contenedor_botones)
+
+    if mDataDf is not None:
+        for i in mData_treeview.get_children():
+            mData_treeview.delete(i)
+
+        mData_treeview["columns"] = list(mDataDf.columns)
+        mData_treeview["show"] = "headings"
+
+        for col in mDataDf.columns:
+            mData_treeview.heading(col, text=col)
+
+        for _, row in mDataDf.iterrows():
+            mData_treeview.insert("", "end", values=list(row))
+
+        row_count_label_mData.config(text=f"Número de filas Master Data: {len(mDataDf)}")
+    
+    createReport2(root, report2_treeview, notebook, contenedor_botones)
+
 #----------------------------------------------------------------------------
 def createGui():
-    global row_count_label_besi, row_count_label_bom, row_count_label_report
+    global row_count_label_besi, row_count_label_bom, row_count_label_report, row_count_label_lx02, row_count_label_report2, row_count_label_mData
     
     root = tk.Tk()
     root.title("Motherson Surtido de cajas diario")
@@ -132,12 +214,18 @@ def createGui():
     # Crear el contenedor de pestañas
     besi_book = ttk.Frame(notebook)
     bom_book = ttk.Frame(notebook)
+    lx02_book = ttk.Frame(notebook)
+    mData_book = ttk.Frame(notebook)
     report_book = ttk.Frame(notebook)
+    report2_book = ttk.Frame(notebook)
 
     # Añadir las pestañas al notebook
     notebook.add(besi_book, text="BESI")
     notebook.add(bom_book, text="BOM")
-    notebook.add(report_book, text="REPORTE")
+    notebook.add(lx02_book, text="LX02")
+    notebook.add(mData_book, text="MD")
+    notebook.add(report_book, text="Surtido Cajas")
+    notebook.add(report2_book, text="Reporte")
 
     # Crear el contenedor para los botones
     contenedor_botones = tk.Frame(root)
@@ -165,6 +253,25 @@ def createGui():
     bom_treeview.pack(side="top", fill="both", expand=True)
     scrollbar_bom.pack(side="bottom", fill="x")
 
+    # Crear el Treeview para LX02
+    lx02_treeview_frame = ttk.Frame(lx02_book)
+    lx02_treeview_frame.pack(fill="both", expand=True)
+    lx02_treeview = ttk.Treeview(lx02_treeview_frame)
+    scrollbar_bom = ttk.Scrollbar(lx02_treeview_frame, orient="horizontal", command=lx02_treeview.xview)
+    lx02_treeview.configure(xscrollcommand=scrollbar_bom.set)
+    lx02_treeview.pack(side="top", fill="both", expand=True)
+    scrollbar_bom.pack(side="bottom", fill="x")
+
+    # Crear el Treeview para Master Data
+    mData_treeview_frame = ttk.Frame(mData_book)
+    mData_treeview_frame.pack(fill="both", expand=True)
+    mData_treeview = ttk.Treeview(mData_treeview_frame)
+    scrollbar_bom = ttk.Scrollbar(mData_treeview_frame, orient="horizontal", command=mData_treeview.xview)
+    mData_treeview.configure(xscrollcommand=scrollbar_bom.set)
+    mData_treeview.pack(side="top", fill="both", expand=True)
+    scrollbar_bom.pack(side="bottom", fill="x")
+
+
     # Crear el Treeview para el REPORTE
     report_treeview_frame = ttk.Frame(report_book)
     report_treeview_frame.pack(fill="both", expand=True)
@@ -174,6 +281,39 @@ def createGui():
     report_treeview.pack(side="top", fill="both", expand=True)
     scrollbar_report.pack(side="bottom", fill="x")
 
+    # Crear el contenedor para los botones
+    report_buttons = tk.Frame(report_treeview_frame)
+    report_buttons.pack(side="top", pady=10)
+
+    #Añadir botón para descargar excel
+    boton_cargar_bom = ttk.Button(report_buttons, text="DESCARGAR .xlsx", command=lambda: exportReport(reportDf))
+    boton_cargar_bom.pack(side="left", padx=10)
+
+    #Añadir botón para descargar pdf
+    boton_cargar_bom = ttk.Button(report_buttons, text="DESCARGAR .pdf", command=lambda: exportPdfReport(reportDf))
+    boton_cargar_bom.pack(side="left", padx=10)
+
+    # Crear el Treeview para el REPORTE 2
+    report2_treeview_frame = ttk.Frame(report2_book)
+    report2_treeview_frame.pack(fill="both", expand=True)
+    report2_treeview = ttk.Treeview(report2_treeview_frame)
+    scrollbar_report = ttk.Scrollbar(report2_treeview_frame, orient="horizontal", command=report2_treeview.xview)
+    report2_treeview.configure(xscrollcommand=scrollbar_report.set)
+    report2_treeview.pack(side="top", fill="both", expand=True)
+    scrollbar_report.pack(side="bottom", fill="x")
+
+    # Crear el contenedor para los botones
+    report2_buttons = tk.Frame(report2_treeview_frame)
+    report2_buttons.pack(side="top", pady=10)
+
+    #Añadir botón para descargar excel
+    boton_cargar_bom = ttk.Button(report2_buttons, text="DESCARGAR .xlsx", command=lambda: exportReport(reportDf))
+    boton_cargar_bom.pack(side="left", padx=10)
+
+    #Añadir botón para descargar pdf
+    boton_cargar_bom = ttk.Button(report2_buttons, text="DESCARGARR .pdf", command=lambda: exportPdfReport(reportDf))
+    boton_cargar_bom.pack(side="left", padx=10)
+
     # Crear etiquetas para mostrar el número de filas en cada pestaña
     row_count_label_besi = tk.Label(besi_book, text="Número de filas BESI: 0", font=("Arial", 10))
     row_count_label_besi.pack(pady=5)
@@ -181,8 +321,20 @@ def createGui():
     row_count_label_bom = tk.Label(bom_book, text="Número de filas BOM: 0", font=("Arial", 10))
     row_count_label_bom.pack(pady=5)
 
-    row_count_label_report = tk.Label(report_book, text="Número de filas REPORTE: 0", font=("Arial", 10))
+    row_count_label_lx02 = tk.Label(lx02_book, text="Número de filas XL02: 0", font=("Arial", 10))
+    row_count_label_lx02.pack(pady=5)
+
+    row_count_label_mData = tk.Label(mData_book, text="Número de filas Master Data: 0", font=("Arial", 10))
+    row_count_label_mData.pack(pady=5)
+
+    row_count_label_report = tk.Label(report_book, text="Número de filas Surtido Cajas: 0", font=("Arial", 10))
     row_count_label_report.pack(pady=5)
+
+    row_count_label_report2 = tk.Label(report2_book, text="Número de filas REPORTE: 0", font=("Arial", 10))
+    row_count_label_report2.pack(pady=5)
+
+
+#----Botones---------------------------------------------------------------------------------
 
     # Añadir Botón para cargar besi
     boton_cargar_besi = ttk.Button(contenedor_botones, text="SUBIR BESI", command=lambda: besiToDf(root, contenedor_botones, besi_treeview, notebook, report_treeview))
@@ -192,13 +344,13 @@ def createGui():
     boton_cargar_bom = ttk.Button(contenedor_botones, text="SUBIR BOM", command=lambda: bomToDf(root, contenedor_botones, bom_treeview, notebook, report_treeview))
     boton_cargar_bom.pack(side="left", padx=10)
 
-    #Añadir botón para descargar excel
-    boton_cargar_bom = ttk.Button(contenedor_botones, text="DESCARGAR .xlsx", command=lambda: exportReport(reportDf))
-    boton_cargar_bom.pack(side="left", padx=10)
+    # Añadir botón para cargar LX02
+    boton_cargar_lx02 = ttk.Button(contenedor_botones, text="SUBIR LX02", command=lambda: lx02ToDf(root, contenedor_botones, lx02_treeview, notebook))
+    boton_cargar_lx02.pack(side="left", padx=10)
 
-    #Añadir botón para descargar pdf
-    boton_cargar_bom = ttk.Button(contenedor_botones, text="DESCARGAR .pdf", command=lambda: exportPdfReport(reportDf))
-    boton_cargar_bom.pack(side="left", padx=10)
+    # Añadir botón para cargar LX02
+    boton_cargar_mData = ttk.Button(contenedor_botones, text="SUBIR MD", command=lambda: mDataToDf(root, contenedor_botones, mData_treeview, notebook, report2_treeview))
+    boton_cargar_mData.pack(side="left", padx=10)
 
     label = tk.Label(contenedor_etiquetas, text='Plataformas:', font=("Arial", 10))
     label.pack(side="left", padx=10)
