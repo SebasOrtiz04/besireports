@@ -5,7 +5,7 @@ import pandas as pd
 
 from data.paths import ICON_PATH, REPORT_NAME_2
 from data.index import platforms
-from utils.main import uploadBesi, uploadBom, calculateReport, exportPdfReport, uploadLx02, calculateReport2, uploadMData, exportReport
+from utils.main import uploadBesi, uploadBom, calculateReport, exportPdfReport, uploadLx02, calculateReport2, uploadMData, exportReport, calculateReport3
 
 # Etiquetas para mostrar el número de filas en cada pestaña
 row_count_label_besi = None
@@ -53,7 +53,7 @@ def createReport2(root, report2_treeview, notebook, contenedor_botones):
 
     row_count_label_report2.config(text=f"Número de filas REPORTE: {len(report2Df)}")
 
-    exportReport(root, contenedor_botones,report2Df,REPORT_NAME_2)
+    calculateReport3(root, contenedor_botones,report2Df)
 
 #-------------------------------------------------------------------
 def createReport(root, contenedor_botones,report_treeview, notebook):
@@ -313,8 +313,8 @@ def createGui():
     boton_cargar_bom.pack(side="left", padx=10)
 
     #Añadir botón para descargar pdf
-    # boton_cargar_bom = ttk.Button(report2_buttons, text="DOH.pdf", command=lambda: exportPdfReport2(root, contenedor_botones,report2Df))
-    # boton_cargar_bom.pack(side="left", padx=10)
+    boton_cargar_bom = ttk.Button(report2_buttons, text="Análisis DOH.xlsx", command=lambda: calculateReport3(root, contenedor_botones,report2Df))
+    boton_cargar_bom.pack(side="left", padx=10)
 
     # Crear etiquetas para mostrar el número de filas en cada pestaña
     row_count_label_besi = tk.Label(besi_book, text="Número de filas BESI: 0", font=("Arial", 10))

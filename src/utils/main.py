@@ -7,7 +7,7 @@ import os
 from tkinter import filedialog, messagebox, simpledialog
 from tkinter import ttk
 from data.index import platforms
-from data.paths import REPORT_NAME, PDF_REPORT_NAME, IMAGE_PATH,REPORT_NAME_2, PDF_REPORT_NAME_2
+from data.paths import REPORT_NAME, IMAGE_PATH,REPORT_NAME_3
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, PageBreak
 from reportlab.lib.pagesizes import landscape, letter
@@ -662,6 +662,83 @@ def exportReport(root, contenedor_botones,reportDf, REPORT_NAME = REPORT_NAME):
 
     openFile(DOC_NAME)
 
+#-----------------------------------------------------------------
+def exportReportMultiSh(root, contenedor_botones,reportLDfList, REPORT_NAME = REPORT_NAME):
+
+
+    #crear la barra de carga
+    progress_bar = createProgressBar(root, contenedor_botones)
+
+    if len(reportLDfList) == 0:
+        messagebox.showwarning("Advertencia", "No se ha generado un reporte")
+        finish_destroy_progress(root, progress_bar)
+        return
+    
+    progress_bar['value'] = 10  # 100%
+    root.update()
+    time.sleep(0.03)
+    
+    # Pedir al usuario que seleccione la carpeta donde guardar el archivo
+    folder_selected = filedialog.askdirectory(title="Selecciona la carpeta para guardar el archivo")
+
+    progress_bar['value'] = 50  # 100%
+    root.update()
+    time.sleep(0.03)
+    
+    if not folder_selected:  # Si no se seleccionó ninguna carpeta
+        print("No se seleccionó ninguna carpeta. Exportación cancelada.")
+        finish_destroy_progress(root, progress_bar)
+        return
+
+    # Definir el nombre del archivo
+    DOC_NAME = os.path.join(folder_selected, REPORT_NAME)
+    try:
+
+        with pd.ExcelWriter(REPORT_NAME) as writer:
+            for df_info in reportLDfList:
+                # Extraer el DataFrame y el nombre de la hoja
+                df = df_info['df']
+                print(df)
+                sheet_name = df_info['sheetName']
+                
+                # Verificar que 'sheet_name' sea un string
+                if not isinstance(sheet_name, str):
+                    print(f"Error: El nombre de la hoja debe ser un string. Valor recibido: {sheet_name}")
+                    continue  # Pasar al siguiente si el nombre de la hoja no es válido
+                
+                # Escribir el DataFrame en la hoja correspondiente
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        progress_bar['value'] = 100  # 100%
+        root.update()
+        time.sleep(0.03)
+    except FileNotFoundError as e:
+        progress_bar['value'] = 100  # 100%
+        root.update()
+        time.sleep(0.03)
+        messagebox.showerror('Error al guardar archivo', f"No se pudo guardar el archivo: {e}")
+        return
+    except Exception as e:
+        print(e)
+        progress_bar['value'] = 100  # 100%
+        root.update()
+        time.sleep(0.03)
+        messagebox.showerror('Error inesperado', f"Ocurrió un error al guardar el archivo: {e}")
+        return
+    finally:
+        progress_bar.destroy()
+        root.update()
+        time.sleep(0.03)
+
+    # Verificar si el archivo se creó
+    if not os.path.exists(DOC_NAME):
+        messagebox. print(f"Error: No se pudo crear el archivo {DOC_NAME}")
+        return  # O manejar el error de la forma que desees
+
+    print(f"Archivo guardado en: {os.path.abspath(DOC_NAME)}")  # Imprimir ruta absoluta
+
+    openFile(DOC_NAME)
+
 #-----------------------------------------------------------------------------------------
 def cookDfToPdf(df):
     # Ordenar jerárquicamente por 'linea', 'Surtidor', y 'Cajas x turno'
@@ -839,7 +916,6 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
     
     # Extraer los encabezadois con formato de fecha
     dateHeaders = getDateHeaders(besiDf)
-    print(mDataDf)
 
     # Definición de encabezados estáticos
     staticHeaders = [
@@ -994,3 +1070,49 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
     finally:
         progress_bar.destroy()
         root.update()
+
+#------------------------------------------------------------------------------
+def calculateCritics(dohDf):
+
+    critic_headers = [
+        'NP SAS', 'Description', 'Supplier', 'Planner', 'Origin',	
+        'Stock On Hand In Plant', 'Days On Hand In Plant','Politica  VWM'
+    ]
+
+    criticDf = dohDf[critic_headers]
+    
+    return criticDf
+#-------------------------------------------------------------------
+def calculateReport3(root, contenedor_botones, dohDf):
+    
+    progress_bar = createProgressBar(root,contenedor_botones)
+
+
+    progress_bar['value'] = 10  # Inicializa la barra a 0%
+    root.update()
+    time.sleep(0.03)
+
+    dataframeList = []
+    try:
+
+        #Cálculo del reporte de criticos
+        criticsDf = calculateCritics(dohDf)
+        critic_report = {
+            'df':criticsDf,
+            'sheetName':'Reporte de Cortos'
+        }
+
+        dataframeList.append(critic_report)
+        
+        progress_bar['value'] = 100  # 100%
+        root.update()
+        time.sleep(0.03)
+    except Exception as e:
+        progress_bar['value'] = 100  # 100%
+        root.update()
+        messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
+    finally:
+        progress_bar.destroy()
+        root.update()
+    
+    exportReportMultiSh(root,contenedor_botones,dataframeList,REPORT_NAME_3)
