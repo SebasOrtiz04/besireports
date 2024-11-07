@@ -663,7 +663,7 @@ def exportReport(root, contenedor_botones,reportDf, REPORT_NAME = REPORT_NAME):
     openFile(DOC_NAME)
 
 #-----------------------------------------------------------------
-def exportReportMultiSh(root, contenedor_botones,reportLDfList, REPORT_NAME = REPORT_NAME):
+def exportReportMultiSh(root, contenedor_botones,reportLDfList, MULTI_REPORT_NAME = REPORT_NAME):
 
 
     #crear la barra de carga
@@ -691,10 +691,10 @@ def exportReportMultiSh(root, contenedor_botones,reportLDfList, REPORT_NAME = RE
         return
 
     # Definir el nombre del archivo
-    DOC_NAME = os.path.join(folder_selected, REPORT_NAME)
+    DOC_NAME = os.path.join(folder_selected, MULTI_REPORT_NAME)
     try:
 
-        with pd.ExcelWriter(REPORT_NAME) as writer:
+        with pd.ExcelWriter(DOC_NAME) as writer:
             for df_info in reportLDfList:
                 # Extraer el DataFrame y el nombre de la hoja
                 df = df_info['df']
@@ -1071,15 +1071,35 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
         progress_bar.destroy()
         root.update()
 
-#------------------------------------------------------------------------------
 def calculateCritics(dohDf):
-
     critic_headers = [
         'NP SAS', 'Description', 'Supplier', 'Planner', 'Origin',	
-        'Stock On Hand In Plant', 'Days On Hand In Plant','Politica  VWM'
+        'Stock On Hand In Plant', 'Days On Hand In Plant', 'Politica  VWM'
     ]
 
-    criticDf = dohDf[critic_headers]
+    # Filtrar las columnas deseadas y hacer una copia explícita
+    criticDf = dohDf[critic_headers].copy()
+    
+    # Asignar los origines esperados
+    test1Origins = ['ASIA', 'EUROPA']
+    test2Origins = ['FRONTERA', 'LOCAL', 'NACIONAL']
+
+    # Crear las condiciones
+    test1 = (criticDf['Origin'].isin(test1Origins)) & (criticDf['Days On Hand In Plant'] < 7)
+    test2 = (criticDf['Origin'].isin(test2Origins)) & (criticDf['Days On Hand In Plant'] < 1)
+
+    # Asignar las condiciones al DataFrame
+    criticDf.loc[:, 'test1'] = test1
+    criticDf.loc[:, 'test2'] = test2
+
+    # Test final
+    criticDf.loc[:, 'test3'] = criticDf['test1'] | criticDf['test2']
+
+    # Eliminar filas no críticas
+    criticDf = criticDf[criticDf['test3']].copy()
+
+    # Eliminar las columnas de prueba
+    criticDf = criticDf.drop(['test1', 'test2', 'test3'], axis=1)
     
     return criticDf
 #-------------------------------------------------------------------
@@ -1110,6 +1130,7 @@ def calculateReport3(root, contenedor_botones, dohDf):
     except Exception as e:
         progress_bar['value'] = 100  # 100%
         root.update()
+        print(e)
         messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
     finally:
         progress_bar.destroy()
