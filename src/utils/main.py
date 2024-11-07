@@ -7,7 +7,7 @@ import os
 from tkinter import filedialog, messagebox, simpledialog
 from tkinter import ttk
 from data.index import platforms
-from data.paths import REPORT_NAME, PDF_REPORT_NAME, IMAGE_PATH,REPORT_NAME_2
+from data.paths import REPORT_NAME, PDF_REPORT_NAME, IMAGE_PATH,REPORT_NAME_2, PDF_REPORT_NAME_2
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, PageBreak
 from reportlab.lib.pagesizes import landscape, letter
@@ -403,8 +403,7 @@ def uploadMData(root, contenedor_botones):
                 return df
             
             else:
-                progress_bar['value'] = 100  # 100%
-                root.update()
+                finish_destroy_progress(root, progress_bar)
                 messagebox.showwarning("Advertencia", "El archivo no contiene el formato correcto")
                 return None
 
@@ -481,7 +480,7 @@ def calculateReport(root, contenedor_botones, besiDf,bomDf):
 
             #Filtrar conforme la referenciay obtener Dr
             platform = platforms[row['Plataforma']]
-            reference = f"{platform['code']}-{sasNumberPart}"
+            reference = f"{platform['code']}-{vwNumberPart}"
             filterReference = besiDf[besiDf['Referencia'] == reference]
             filterReference = filterReference.iloc[0]  if not filterReference.empty else None
             dr = filterReference['Dr'] if filterReference is not None else 0
@@ -898,7 +897,7 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
 
     try:
         # Se recorre el Master Data
-        for i, row in mDataDf.iterrows():
+        for _, row in mDataDf.iterrows():
 
             # Setear numeros de parte
             sasNumberPart = row['NP SAS']
@@ -924,7 +923,7 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
             storageType = row['Tipo de almacenamiento']
 
             if storageType == 'rack':
-                lx02Filtered = lx02Filtered[lx02Filtered['Tipo almacén'] == 921]
+                lx02Filtered = lx02Filtered[lx02Filtered['Tipo almacén'] != 921]
 
             # Cálcular el inventario existente
             stockOnHandInPlant = sum(lx02Filtered['Stock disponible'].to_list())
@@ -944,28 +943,30 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
             }
 
             doh = 0
-
+            sumRequeriment = 0
             
             for _, dateHader in enumerate(dateHeaders):
 
                 #Cálcula el requerimiendo del besi por número de parte
                 besiHeader = f"BESI {dateHader}"
                 dayRequeriment = sum(besiFiltered[dateHader].to_list()) 
+                sumRequeriment += dayRequeriment
                 newRow[besiHeader] = dayRequeriment
                 
                 #Cálcula el restante despues del día
                 beforeHeader = f"Before {dateHader}"
+                startDatStock = stockOnHandInPlant
                 stockOnHandInPlant -= dayRequeriment
                 newRow[beforeHeader] = stockOnHandInPlant
                 
                 #Cálcula el restante despues del día
                 dohHeader = f"DOH {dateHader}"
 
-                if stockOnHandInPlant > 0 and dayRequeriment > 0 and dayRequeriment <= stockOnHandInPlant:
+                if dayRequeriment > 0 and dayRequeriment <= startDatStock:
                     doh = doh + 1 
 
-                if stockOnHandInPlant > 0 and dayRequeriment > stockOnHandInPlant:
-                    doh = doh + ( stockOnHandInPlant / dayRequeriment)
+                if startDatStock > 0 and dayRequeriment > startDatStock:
+                    doh = doh + ( startDatStock / dayRequeriment)
 
                 newRow[dohHeader] = doh
             
@@ -976,7 +977,8 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
             root.update()
             time.sleep(0.03)
 
-            filas.append(newRow)
+            if sumRequeriment > 0:
+                filas.append(newRow)
 
         report2Df = pd.concat([report2Df, pd.DataFrame(filas)], ignore_index=True)
         
@@ -992,162 +994,3 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
     finally:
         progress_bar.destroy()
         root.update()
-
-def cookDoh(dohDf):
-    return dohDf
-
-#--------------------------------------------------------------------------------------------
-def exportPdfReport2(root, contenedor_botones, reportDf):
-
-    #crear la barra de carga
-    progress_bar = createProgressBar(root, contenedor_botones)
-
-    if reportDf is None:
-        messagebox.showwarning("Advertencia", "No se ha generado un reporte")
-        finish_destroy_progress(root, progress_bar)
-        return
-    
-    cookedReport = cookDoh(reportDf)
-    
-    progress_bar['value'] = 10
-    root.update()
-    time.sleep(0.03)
-    
-    try:
-        # Cocinar los datos con la función previa
-        cookedReport = cookDfToPdf(reportDf) 
-
-        progress_bar['value'] = 50
-        root.update()
-        time.sleep(0.03)
-        
-        # Se cálcula el paso para el loader en la iteración
-        bomtaLen = len(reportDf)
-        loadStep = 50 / bomtaLen
-        
-        # Seleccionar carpeta de destino
-        folder_selected = filedialog.askdirectory(title="Selecciona la carpeta para guardar el archivo")
-        
-        progress_bar['value'] = 60
-        root.update()
-        time.sleep(0.03)
-        
-        if not folder_selected:
-            print("No se seleccionó ninguna carpeta. Exportación cancelada.")
-            finish_destroy_progress(root, progress_bar)
-            return
-
-        REPORT_NAME = os.path.join(folder_selected, "ReporteSurtimiento.pdf")
-        
-        # Obtener la fecha actual
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        
-        # Configurar el documento PDF
-        pdf = SimpleDocTemplate(REPORT_NAME, pagesize=landscape(letter), leftMargin=5, rightMargin=5, topMargin=10, bottomMargin=10)
-        elements = []
-        
-        # Obtener el tamaño de la página
-        ancho, alto = landscape(letter)
-        
-        # Estilo de título
-        styles = getSampleStyleSheet()
-
-        # Añadir imagen y encabezado antes de cada DataFrame
-        for df in cookedReport:
-
-            if df.empty:
-                continue  # Saltar DataFrames vacíos
-
-            # Añadir imagen (opcional)
-            if os.path.exists(IMAGE_PATH):
-                img = Image(IMAGE_PATH, width=298/3, height=94/3)
-                elements.append(img)
-            else:
-                messagebox.showwarning("Advertencia", f"La imagen no se encontró en {IMAGE_PATH}")
-
-            # Añadir un título o encabezado
-            elements.append(Spacer(1, 12))
-            elements.append(Paragraph(f"Reporte de surtimiento - {df['linea'].iloc[0]} - {df['Surtidor'].iloc[0]}", styles['Title']))  # Título dinámico basado en 'linea'
-            
-            df = df.drop([
-                'linea',
-                'No Parte SAS',
-                'Surtidor',
-                'Inv',
-                'Req diario Besi',
-                'Turnos',
-                'Cobertura x caja (hrs)',
-                'Cajas a surtir x turno',
-                'Distancia',
-                'Tiempo Surtimiento (Segundos) x caja',
-                'Tiempo recorrido (Segundos) x caja',
-                'Work content x turno (min)'
-            ], axis=1)
-            
-            # # Reemplazar 'nan' por cadenas vacías y espacios por saltos de línea en las celdas del DataFrame
-            df = df.map(lambda x: '' if pd.isna(x) else x)
-
-            # Reemplazar espacios por saltos de línea en los nombres de las columnas
-            df.columns = [col.replace(' ', '\n') for col in df.columns]
-            
-            # Convertir el DataFrame a una tabla
-            data = [df.columns.tolist()] + df.values.tolist()
-
-            table = Table(data)
-
-            # Establecer el estilo de la tabla
-            style = TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 3),
-                ('TOPPADDING', (0, 0), (-1, 0), 3),
-                ('BOTTOMPADDING', (0, 1), (-1, -1), 2),
-                ('TOPPADDING', (0, 1), (-1, -1), 2),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ])
-            table.setStyle(style)
-
-            # Añadir la tabla al documento
-            elements.append(Spacer(1, 12))
-            elements.append(table)
-
-            # Añadir un salto de página para que el siguiente DataFrame comience en la próxima página
-            elements.append(PageBreak())
-
-            # progress_bar['value'] = progress_bar['value'] + loadStep
-            # root.update()
-            # time.sleep(0.001)
-
-        # Función para agregar el pie de página con la fecha
-        def add_footer(canvas, doc):
-            canvas.saveState()
-            canvas.setFont('Helvetica', 8)
-            canvas.drawString(inch, 0.12 * inch, f"Fecha: {current_date}")
-            canvas.restoreState()
-
-        # Guardar el archivo PDF
-        pdf.build(elements,onLaterPages=add_footer, onFirstPage=add_footer)
-    except PermissionError as e:
-        progress_bar['value'] = 100  # 100%
-        root.update()
-        time.sleep(0.03)
-        messagebox.showerror('Error de Permiso', f"El archivo '{REPORT_NAME}' está abierto o en uso. Ciérralo e intenta nuevamente.")
-        return
-    
-    progress_bar['value'] = 100
-    root.update()
-    time.sleep(0.03)
-    
-    # Verificar si el archivo se creó
-    if not os.path.exists(REPORT_NAME):
-        messagebox.showerror(f"Error: No se pudo crear el archivo {REPORT_NAME}")
-        return
-    
-    progress_bar.destroy()
-    root.update()
-
-    openFile(REPORT_NAME)
