@@ -103,11 +103,22 @@ def uploadBesi(root, contenedor_botones):
     expected_headers = ['TME', 'Noparte']
 
     # Seleccionar archivo
-    archivo = filedialog.askopenfilename(title='Subir BESI',filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])    
+    archivo = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
 
-    #crear la barra de carga
-    progress_bar = createProgressBar(root, contenedor_botones)
+    # Configurar el estilo personalizado para la barra de progreso
+    style = ttk.Style(root)  
     
+    style.configure("my.Horizontal.TProgressbar", 
+                    troughcolor='white',  
+                    background='red',    
+                    thickness=10)         
+
+    # Crear la barra de progreso en modo determinate
+    progress_bar = ttk.Progressbar(contenedor_botones, 
+                                   style="my.Horizontal.TProgressbar", 
+                                   mode='determinate', 
+                                   length=200)
+    progress_bar.pack(side="left", padx=10)
     progress_bar['value'] = 0  # Inicializa la barra a 0%
     root.update()
 
@@ -116,7 +127,7 @@ def uploadBesi(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 10  # 25%
             root.update()
-            time.sleep(0.03)
+            time.sleep(0.1)
             
             # Cargar el archivo Excel en un DataFrame
             df = pd.read_excel(archivo, header=0)
@@ -124,7 +135,7 @@ def uploadBesi(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 20  # 25%
             root.update()
-            time.sleep(0.03)
+            time.sleep(0.1)
 
             # Asegurar que los encabezados sean strings y eliminar espacios en blanco
             df.columns = df.columns.map(lambda x: str(x).strip())
@@ -133,13 +144,13 @@ def uploadBesi(root, contenedor_botones):
 
                 progress_bar['value'] = 40  # 75%
                 root.update()
-                time.sleep(0.03)
+                time.sleep(0.1)
 
                 # Aplicar los filtros
                 df = platformFilter(df)
                 progress_bar['value'] = 60  # 75%
                 root.update()
-                time.sleep(0.03)
+                time.sleep(0.1)
 
                 df = cookBesi(df)
                 progress_bar['value'] = 100  # 100%
@@ -158,7 +169,7 @@ def uploadBesi(root, contenedor_botones):
             root.update()
             messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
         finally:
-            time.sleep(0.03)
+            time.sleep(0.1)
             progress_bar.destroy()
             root.update()
     else:
@@ -186,11 +197,22 @@ def uploadBom(root, contenedor_botones):
     ]
 
     # Seleccionar archivo
-    archivo = filedialog.askopenfilename(title='Subir BOM',filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])    
+    archivo = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xls;*.xlsx"), ("Todos los archivos", "*.*")])
 
-    #crear la barra de carga
-    progress_bar = createProgressBar(root, contenedor_botones)
+    # Configurar el estilo personalizado para la barra de progreso
+    style = ttk.Style(root)  
     
+    style.configure("my.Horizontal.TProgressbar", 
+                    troughcolor='white',  
+                    background='red',    
+                    thickness=10)         
+
+    # Crear la barra de progreso en modo determinate
+    progress_bar = ttk.Progressbar(contenedor_botones, 
+                                   style="my.Horizontal.TProgressbar", 
+                                   mode='determinate', 
+                                   length=200)
+    progress_bar.pack(side="left", padx=10)
     progress_bar['value'] = 0  # Inicializa la barra a 0%
     root.update()
 
@@ -199,7 +221,7 @@ def uploadBom(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 10  # 25%
             root.update()
-            time.sleep(0.03)
+            time.sleep(0.1)
             
             # Cargar el archivo Excel en un DataFrame
             df = pd.read_excel(archivo, header=1)
@@ -207,7 +229,7 @@ def uploadBom(root, contenedor_botones):
             # Aumentar el valor de la barra de progreso
             progress_bar['value'] = 20  # 25%
             root.update()
-            time.sleep(0.03)
+            time.sleep(0.1)
 
             # Asegurar que los encabezados sean strings y eliminar espacios en blanco
             df.columns = df.columns.map(lambda x: str(x).strip())
@@ -220,13 +242,13 @@ def uploadBom(root, contenedor_botones):
 
                 progress_bar['value'] = 40  # 75%
                 root.update()
-                time.sleep(0.03)
+                time.sleep(0.1)
 
                 # # Aplicar los filtros
                 # df = platformFilter(df)
                 # progress_bar['value'] = 60  # 75%
                 # root.update()
-                # time.sleep(0.03)
+                # time.sleep(0.1)
 
                 progress_bar['value'] = 100  # 100%
                 root.update()
@@ -244,7 +266,7 @@ def uploadBom(root, contenedor_botones):
             root.update()
             messagebox.showerror("Algo salió mal", f"Hubo un error al cargar el archivo: {str(e)}")
         finally:
-            time.sleep(0.03)
+            time.sleep(0.1)
             progress_bar.destroy()
             root.update()
     else:
@@ -476,8 +498,8 @@ def calculateReport(root, contenedor_botones, besiDf,bomDf):
 
             #Asignar valores desde BOM
             sasNumberPart = row['No. Part e SAS']
-            vwNumberPart = sasNumberPart.replace(' ','')
-
+            vwNumberPart = sasNumberPart.replace('\xa0', '').replace(' ','')
+            
             #Filtrar conforme la referenciay obtener Dr
             platform = platforms[row['Plataforma']]
             reference = f"{platform['code']}-{vwNumberPart}"
@@ -775,7 +797,7 @@ def exportPdfReport(reportDf):
         print("No se seleccionó ninguna carpeta. Exportación cancelada.")
         return
 
-    REPORT_NAME = os.path.join(folder_selected, "ReporteSurtimiento.pdf")
+    REPORT_NAME = os.path.join(folder_selected, "Reporte Surtimiento.pdf")
     
     # Obtener la fecha actual
     current_date = datetime.now().strftime("%Y-%m-%d")
