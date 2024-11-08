@@ -698,7 +698,6 @@ def exportReportMultiSh(root, contenedor_botones,reportLDfList, MULTI_REPORT_NAM
             for df_info in reportLDfList:
                 # Extraer el DataFrame y el nombre de la hoja
                 df = df_info['df']
-                print(df)
                 sheet_name = df_info['sheetName']
                 
                 # Verificar que 'sheet_name' sea un string
@@ -1071,6 +1070,7 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
         progress_bar.destroy()
         root.update()
 
+#-----------------------------------------------------------------------------------------
 def calculateCritics(dohDf):
     critic_headers = [
         'NP SAS', 'Description', 'Supplier', 'Planner', 'Origin',	
@@ -1082,11 +1082,11 @@ def calculateCritics(dohDf):
     
     # Asignar los origines esperados
     test1Origins = ['ASIA', 'EUROPA']
-    test2Origins = ['FRONTERA', 'LOCAL', 'NACIONAL']
+    test2Origins = ['FRONTERA', 'LOCAL', 'NACIONAL', 'USA']
 
     # Crear las condiciones
-    test1 = (criticDf['Origin'].isin(test1Origins)) & (criticDf['Days On Hand In Plant'] < 7)
-    test2 = (criticDf['Origin'].isin(test2Origins)) & (criticDf['Days On Hand In Plant'] < 1)
+    test1 = (criticDf['Origin'].str.upper().isin(test1Origins)) & (criticDf['Days On Hand In Plant'] < 7)
+    test2 = (criticDf['Origin'].str.upper().isin(test2Origins)) & (criticDf['Days On Hand In Plant'] < 1)
 
     # Asignar las condiciones al DataFrame
     criticDf.loc[:, 'test1'] = test1
@@ -1102,11 +1102,98 @@ def calculateCritics(dohDf):
     criticDf = criticDf.drop(['test1', 'test2', 'test3'], axis=1)
     
     return criticDf
+
+#-----------------------------------------------------------------------------------------
+def calculateExcesses(dohDf):
+    critic_headers = [
+        'NP SAS', 'Description', 'Supplier', 'Planner', 'Origin',	
+        'Stock On Hand In Plant', 'DOH promedio', 'Politica  VWM'
+    ]
+
+    # Filtrar las columnas que contienen 'DOH' en el nombre
+    doh_headers = dohDf.columns[dohDf.columns.str.contains('BESI ', case=False)]
+
+    # Filtrar las columnas deseadas y hacer una copia explícita
+    excessDf = dohDf.copy()
+
+    # Calcular el promedio de las columnas que contienen 'DOH' en su nombre, excluyendo ceros
+    excessDf['DOH promedio'] = excessDf['Stock On Hand In Plant'] / excessDf[doh_headers].replace(0, pd.NA).mean(axis=1)
+
+    # Filtramos las columnas deseadas 
+    excessDf = excessDf[critic_headers]
+
+    # Insertar la columna en una posición específica
+    excessDf.insert(6, 'DOH promedio', excessDf.pop('DOH promedio'))
+
+    # Asignar los origines esperados
+    test1Origins = ['ASIA', 'EUROPA']
+    test2Origins = ['FRONTERA', 'LOCAL', 'NACIONAL', 'USA']
+
+    # Declartación de test
+    test1 = (excessDf['Origin'].str.upper().isin(test1Origins)) & (excessDf['DOH promedio'] > excessDf['Politica  VWM'])
+    test2 = (excessDf['Origin'].str.upper().isin(test2Origins)) & (excessDf['DOH promedio'] > excessDf['Politica  VWM'])
+
+    # Agregamos los test al df
+    excessDf.loc[:,'test1'] = test1 
+    excessDf.loc[:,'test2'] = test2 
+
+    # Test final
+    excessDf.loc[:,'test3'] = excessDf['test1'] | excessDf['test2']
+
+    # Eliminar las filas que no son excedentes
+    excessDf = excessDf[excessDf['test3']]
+
+    # Limpiar columnas
+    excessDf = excessDf.drop(['test1','test2', 'test3'], axis = 1)
+
+
+    return excessDf
+
 #-------------------------------------------------------------------
-def calculateReport3(root, contenedor_botones, dohDf):
+def calculateLx02Report1(lx02Df):
+
+    lx02Copy = lx02Df.copy()
+
+    uniquesMaterials = lx02Copy['Material'].unique()
+
+    lx02Report1Headers = ['Etiquetas de fila', 'Cuenta de Ubicación'] 
+    lx02Report1 = pd.DataFrame(columns=lx02Report1Headers)
+
+    rows = []
+
+    for material in uniquesMaterials:
+
+        materialDf = lx02Copy[lx02Copy['Material'] == material]
+        materialCount = len(materialDf)
+
+        if materialCount <= 2 :
+            newRow = {'Etiquetas de fila': material, 'Cuenta de Ubicación' : materialCount}
+            rows.append(newRow)
+
+    lx02Report1 = pd.concat([lx02Report1,pd.DataFrame(rows)], ignore_index=True)
+
+    return lx02Report1
+
+#------------------------------------------------------------------
+def calculateLx02Report2(lx02Df, mDataDf):
+    # Especifica las columnas clave de cada DataFrame
+    columna_lx02 = 'Material'  # Columna en lx02Df para comparar
+    columna_mData = 'NP SAS'  # Columna en mDataDf para comparar
+
+    # Filtrar las filas de `lx02Df` que no tienen valores en `columna_mData` de `mDataDf`
+    resultado = lx02Df[~lx02Df[columna_lx02].isin(mDataDf[columna_mData])]
+
+    # Tomar solo las columnas de interes
+    finalCols = ['Material', 'Stock disponible']
+
+    resultado = resultado[finalCols]
+    
+    return resultado
+
+#-------------------------------------------------------------------
+def calculateReport3(root, contenedor_botones, dohDf, lx02Df, mDataDf):
     
     progress_bar = createProgressBar(root,contenedor_botones)
-
 
     progress_bar['value'] = 10  # Inicializa la barra a 0%
     root.update()
@@ -1115,15 +1202,30 @@ def calculateReport3(root, contenedor_botones, dohDf):
     dataframeList = []
     try:
 
-        #Cálculo del reporte de criticos
+        # Cálculo del reporte de criticos
         criticsDf = calculateCritics(dohDf)
-        critic_report = {
-            'df':criticsDf,
-            'sheetName':'Reporte de Cortos'
-        }
+        critic_report = {'df':criticsDf, 'sheetName' : 'Reporte de cortos'}
 
-        dataframeList.append(critic_report)
+        # Cálculo del reporte de excesos
+        excessesDf = calculateExcesses(dohDf)
+        excess_report = {'df' : excessesDf,'sheetName' : 'Reporte de excesos'}
+
+        # Filtrar lx02 con tomando solo almacen 014
+        filteredLx02Df = lx02Df[lx02Df['Tipo almacén'] == 14].copy()
+
+        # Cálculo del report Componentes con max 2 bines de existencia
+        lx02Report1Df = calculateLx02Report1(filteredLx02Df)
+        lx02_report_1 = {'df' : lx02Report1Df,'sheetName' : 'Comp max 2 bines de existencia'}
+
+        # Cálculo del report Componentes con max 2 bines de existencia
+        lx02Report2Df = calculateLx02Report2(filteredLx02Df, mDataDf)
+        lx02_report_2 = {'df' : lx02Report2Df,'sheetName' : 'Comp no incluidos en MD'}
         
+        dataframeList.append(critic_report)
+        dataframeList.append(excess_report)
+        dataframeList.append(lx02_report_1)
+        dataframeList.append(lx02_report_2)
+
         progress_bar['value'] = 100  # 100%
         root.update()
         time.sleep(0.03)

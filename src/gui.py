@@ -53,7 +53,7 @@ def createReport2(root, report2_treeview, notebook, contenedor_botones):
 
     row_count_label_report2.config(text=f"Número de filas REPORTE: {len(report2Df)}")
 
-    calculateReport3(root, contenedor_botones,report2Df)
+    calculateReport3(root, contenedor_botones,report2Df,lx02Df, mDataDf)
 
 #-------------------------------------------------------------------
 def createReport(root, contenedor_botones,report_treeview, notebook):
@@ -313,7 +313,7 @@ def createGui():
     boton_cargar_bom.pack(side="left", padx=10)
 
     #Añadir botón para descargar pdf
-    boton_cargar_bom = ttk.Button(report2_buttons, text="Análisis DOH.xlsx", command=lambda: calculateReport3(root, contenedor_botones,report2Df))
+    boton_cargar_bom = ttk.Button(report2_buttons, text="Análisis DOH.xlsx", command=lambda: calculateReport3(root, contenedor_botones,report2Df, lx02Df, mDataDf))
     boton_cargar_bom.pack(side="left", padx=10)
 
     # Crear etiquetas para mostrar el número de filas en cada pestaña
