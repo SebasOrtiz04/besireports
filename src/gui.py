@@ -87,7 +87,7 @@ def createReport(root, contenedor_botones,report_treeview, notebook):
 
     row_count_label_report.config(text=f"Número de filas REPORTE: {len(reportDf)}")
 
-    exportPdfReport(reportDf)
+    exportPdfReport(root, contenedor_botones,reportDf)
 
 #-------------------------------------------------------------------
 def besiToDf(root, contenedor_botones, besi_treeview, notebook, report_treeview):
@@ -292,7 +292,7 @@ def createGui():
     boton_cargar_bom.pack(side="left", padx=10)
 
     #Añadir botón para descargar pdf
-    boton_cargar_bom = ttk.Button(report_buttons, text="Surtido cajas.pdf", command=lambda: exportPdfReport(reportDf))
+    boton_cargar_bom = ttk.Button(report_buttons, text="Surtido cajas.pdf", command=lambda: exportPdfReport(root, contenedor_botones,reportDf))
     boton_cargar_bom.pack(side="left", padx=10)
 
     # Crear el Treeview para el REPORTE 2
