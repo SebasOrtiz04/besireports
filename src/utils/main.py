@@ -1203,7 +1203,7 @@ def calculateLx02Report1(lx02Df):
 
     uniquesMaterials = lx02Copy['Material'].unique()
 
-    lx02Report1Headers = ['NP SAS', 'Cuenta de Ubicación'] 
+    lx02Report1Headers = ['NP SAS', 'Cuenta de Ubicación', 'Stock por Ubicación'] 
     lx02Report1 = pd.DataFrame(columns=lx02Report1Headers)
 
     rows = []
@@ -1214,7 +1214,9 @@ def calculateLx02Report1(lx02Df):
         materialCount = len(materialDf)
 
         if materialCount <= 2 :
-            newRow = {'NP SAS': material, 'Cuenta de Ubicación' : materialCount}
+            materialDf['concat'] = materialDf['Ubicación'].astype(str) + " : " + materialDf['Stock disponible'].astype(str)
+            stringStock = ' | '.join(materialDf['concat'].to_list())
+            newRow = {'NP SAS': material, 'Cuenta de Ubicación' : materialCount, 'Stock por Ubicación':stringStock}
             rows.append(newRow)
 
     lx02Report1 = pd.concat([lx02Report1,pd.DataFrame(rows)], ignore_index=True)
