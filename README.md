@@ -2,17 +2,14 @@
 
 Este proyecto es un programa en Python que carga 4 archivos en formato `.xls`, analiza los datos y genera diversos reportes. El objetivo es automatizar la lectura y análisis de datos para generar reportes en un entorno de producción.
 
-## Funcionaliodades
+## Funcionalidades
 
-- Carga de archivos: Importa 2 archivos .xls para su análisis.
+- **Carga de archivos**: Importa 2 archivos `.xls` para su análisis.
+- **Análisis de datos**: Extrae información clave y realiza cálculos automáticos.
+- **Generación de reportes**: Genera reportes automatizados en formato XLSX.
+- **Exportación**: Permite descargar reportes en formato `.xlsx` y `.pdf` con un clic.
 
-- Anpalisi8s de datos: Extrae información clave y realiza cálculos automáticos.
-
-- Generación de reportes: Genera reportes automátizados en formato XLSX.
-
-- Exportación: Permite descargar reportes en formato .xlsx y .pdf con un clic.
-
-## Estructura del proyecto
+## Estructura del Proyecto
 
 ```plaintext
 besireports/
@@ -30,6 +27,7 @@ besireports/
 ├── README.md              # Documentación del proyecto
 ├── LICENCE.txt            # Licencia del proyecto
 └── requirements.txt       # Requerimientos del proyecto
+```
 
 ## Requisitos
 
@@ -70,15 +68,6 @@ besireports/
 3. Selecciona la carpeta para guardar el reporte de surtimiento.
 
 4. Puedes descargar el reporte completo en formato XLXS presionando el botón de DESCARGAR.xlxs.
-
-## Build para Distribución con PyInstaller
-
-1. Crea el ejecutable:
-
-    '''bash
-    pyinstaller --onedir --windowed --icon=./assets/ico.ico  --add-data "assets\*;assets" src/main.py
-
-2. Arranca el ejecutable generado en /dist/main
 
 ## Licencia
 
