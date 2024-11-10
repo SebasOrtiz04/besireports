@@ -108,7 +108,7 @@ def createGui():
     global row_count_label_besi, row_count_label_bom, row_count_label_report
     
     root = tk.Tk()
-    root.title("Motherson Surtido de cajas diario")
+    root.title("Análissis BESI")
     root.iconbitmap(ICON_PATH)
     root.geometry("800x600")
 

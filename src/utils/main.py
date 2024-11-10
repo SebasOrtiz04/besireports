@@ -498,7 +498,7 @@ def exportPdfReport(reportDf):
 
         # Añadir imagen (opcional)
         if os.path.exists(IMAGE_PATH):
-            img = Image(IMAGE_PATH, width=298/3, height=94/3)
+            img = Image(IMAGE_PATH, width=80, height=80)
             elements.append(img)
         else:
             messagebox.showwarning("Advertencia", f"La imagen no se encontró en {IMAGE_PATH}")
