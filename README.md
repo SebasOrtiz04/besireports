@@ -14,26 +14,22 @@ Este proyecto es un programa en Python que carga 4 archivos en formato `.xls`, a
 
 ## Estructura del proyecto
 
-besireports/
-|--- src/
-│   └── data/
-|       └--- index.py
-|       |--- paths.py
-|--- assets/
-
+```plaintext
 besireports/
 ├── assets/
 │   ├── ico.ico            # Ícono para el ejecutable
-│   └── logo.png            # Logo para el reporte .pdf
+│   └── logo.png           # Logo para el reporte .pdf
 ├── src/
-│   ├── data/            # Entrada al código principal del programa
-│   ├── main.py            # Entrada al código principal del programa
-│   ├── main.py            # Entrada al código principal del programa
-│   └── gui.py            # Entrada al código principal del programa
+│   ├── data/              # Constantes del programa
+│   ├── utils/             # Funciones helper
+│   ├── gui.py             # Creación de la interfaz
+│   └── main.py            # Entrada al código principal del programa
 ├── example-docs/          # Archivos de ejemplo para pruebas
 │   ├── besi.xlsx
 │   └── bom.xlsx
-└── README.md              # Documentación del proyecto
+├── README.md              # Documentación del proyecto
+├── LICENCE.txt            # Licencia del proyecto
+└── requirements.txt       # Requerimientos del proyecto
 
 ## Requisitos
 
@@ -51,8 +47,8 @@ besireports/
 1. Clona el repositorio:
 
     ```bash
-    git clone https://github.com/tuusuario/nombre-del-repositorio.git
-    cd nombre-del-repositorio
+    git clone https://github.com/SebasOrtiz04/besireports.git
+    cd besireport
 
 2. Instala las dependencias necesarias:
 
@@ -84,4 +80,6 @@ besireports/
 
 2. Arranca el ejecutable generado en /dist/main
 
-Este `README.md` cubre el propósito y el uso del programa, cómo configurarlo y los pasos para el despliegue y la generación de un ejecutable en producción. Asegúrate de personalizarlo de acuerdo con las necesidades específicas de tu proyecto.
+## Licencia
+
+Este proyecto está licenciado bajo los términos de la Licencia MIT. Consulta el archivo LICENSE para más detalles.
