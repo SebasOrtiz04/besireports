@@ -1,7 +1,6 @@
 #rutas de imagenes
-ICON_PATH = './assets/motherson.ico'
+ICON_PATH = './assets/ico.ico'
 IMAGE_PATH = './assets/logo.png'
-
 FILES_PATH ='./docs/'
-REPORT_NAME = 'Reporte de requerimientos motherson.xlsx'
-PDF_REPORT_NAME = 'Reporte de requerimientos motherson.pdf'
+REPORT_NAME = 'Reporte de requerimientos.xlsx'
+PDF_REPORT_NAME = 'Surtido de cajas.pdf'
