@@ -2,6 +2,39 @@
 
 Este proyecto es un programa en Python que carga 4 archivos en formato `.xls`, analiza los datos y genera diversos reportes. El objetivo es automatizar la lectura y análisis de datos para generar reportes en un entorno de producción.
 
+## Funcionaliodades
+
+- Carga de archivos: Importa 2 archivos .xls para su análisis.
+
+- Anpalisi8s de datos: Extrae información clave y realiza cálculos automáticos.
+
+- Generación de reportes: Genera reportes automátizados en formato XLSX.
+
+- Exportación: Permite descargar reportes en formato .xlsx y .pdf con un clic.
+
+## Estructura del proyecto
+
+besireports/
+|--- src/
+│   └── data/
+|       └--- index.py
+|       |--- paths.py
+|--- assets/
+
+besireports/
+├── assets/
+│   ├── ico.ico            # Ícono para el ejecutable
+│   └── logo.png            # Logo para el reporte .pdf
+├── src/
+│   ├── data/            # Entrada al código principal del programa
+│   ├── main.py            # Entrada al código principal del programa
+│   ├── main.py            # Entrada al código principal del programa
+│   └── gui.py            # Entrada al código principal del programa
+├── example-docs/          # Archivos de ejemplo para pruebas
+│   ├── besi.xlsx
+│   └── bom.xlsx
+└── README.md              # Documentación del proyecto
+
 ## Requisitos
 
 1. Python 3.9 o superior
@@ -40,6 +73,15 @@ Este proyecto es un programa en Python que carga 4 archivos en formato `.xls`, a
 
 3. Selecciona la carpeta para guardar el reporte de surtimiento.
 
-4. Puedes descargar el reporte completo en formato XLXS presionando el botón de 
+4. Puedes descargar el reporte completo en formato XLXS presionando el botón de DESCARGAR.xlxs.
+
+## Build para Distribución con PyInstaller
+
+1. Crea el ejecutable:
+
+    '''bash
+    pyinstaller --onedir --windowed --icon=./assets/ico.ico  --add-data "assets\*;assets" src/main.py
+
+2. Arranca el ejecutable generado en /dist/main
 
 Este `README.md` cubre el propósito y el uso del programa, cómo configurarlo y los pasos para el despliegue y la generación de un ejecutable en producción. Asegúrate de personalizarlo de acuerdo con las necesidades específicas de tu proyecto.
