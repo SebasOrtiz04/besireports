@@ -1,5 +1,3 @@
-# Análisis BESI
-
 # Proyecto de Análisis BESI XLXS
 
 Este proyecto es un programa en Python que carga 4 archivos en formato `.xls`, analiza los datos y genera diversos reportes. El objetivo es automatizar la lectura y análisis de datos para generar reportes en un entorno de producción.
@@ -15,62 +13,33 @@ Este proyecto es un programa en Python que carga 4 archivos en formato `.xls`, a
    - `report-lab`
    - `pyinstaller`
 
-Aquí tienes un ejemplo de un README.md para tu programa. Este archivo incluye una descripción del proyecto, instrucciones para la instalación, el uso, cómo hacer el deploy en producción utilizando watchdog para monitorear cambios en los archivos, y el proceso para hacer un build con pyinstaller.
-
-markdown
-Copiar código
 ## Instalación
 
 1. Clona el repositorio:
 
-   ```bash
-   git clone https://github.com/tuusuario/nombre-del-repositorio.git
-   cd nombre-del-repositorio
-Instala las dependencias necesarias:
+    ```bash
+    git clone https://github.com/tuusuario/nombre-del-repositorio.git
+    cd nombre-del-repositorio
 
-bash
-Copiar código
-pip install -r requirements.txt
-El archivo requirements.txt debe incluir las dependencias necesarias:
+2. Instala las dependencias necesarias:
 
-txt
-Copiar código
-pandas
-watchdog
-Asegúrate de tener los archivos .xls en la carpeta especificada en el archivo de configuración o como se indica en las instrucciones de uso.
+    pip install -r requirements.txt
 
-Uso
-Para ejecutar el programa y generar los reportes, ejecuta:
+## Uso
 
-bash
-Copiar código
-python main.py
-El programa cargará los archivos .xls, realizará el análisis y generará cuatro reportes en la carpeta de salida especificada.
+1. Para ejecutar el programa y generar los reportes, ejecuta:
 
-Configuración
-En el archivo config.json, puedes definir:
+    python main.py
 
-La carpeta de entrada donde se encuentran los archivos .xls.
-La carpeta de salida para los reportes generados.
-Otros parámetros de configuración necesarios para el análisis de datos.
-Ejemplo de config.json:
+2. Seleciona los archivos con los encabezados correspondientes:
 
-json
-Copiar código
-{
-    "input_folder": "./data/input",
-    "output_folder": "./data/output"
-}
-Deploy en Producción
+    - besi.xlxs
+    - bom.xlxs
 
-## Instalación
+    Podrás encontrar los archivos de ejemplo en la carpeta /example-docs.
 
-1. Clona el repositorio:
+3. Selecciona la carpeta para guardar el reporte de surtimiento.
 
-   ```bash
-   git clone https://github.com/tuusuario/nombre-del-repositorio.git
-   cd nombre-del-repositorio
-
-
+4. Puedes descargar el reporte completo en formato XLXS presionando el botón de 
 
 Este `README.md` cubre el propósito y el uso del programa, cómo configurarlo y los pasos para el despliegue y la generación de un ejecutable en producción. Asegúrate de personalizarlo de acuerdo con las necesidades específicas de tu proyecto.
