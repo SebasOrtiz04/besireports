@@ -4,11 +4,9 @@ import time
 import math
 import os
 
-from tkinter import filedialog, messagebox, simpledialog
+from tkinter import filedialog, messagebox
 from tkinter import ttk
-from data.index import platforms
-from data.paths import REPORT_NAME, IMAGE_PATH,REPORT_NAME_3
-
+from config import platforms, REPORT_NAME, IMAGE_PATH,REPORT_NAME_3
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, PageBreak
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib import colors
@@ -222,12 +220,6 @@ def uploadBom(root, contenedor_botones):
                 root.update()
                 time.sleep(0.03)
 
-                # # Aplicar los filtros
-                # df = platformFilter(df)
-                # progress_bar['value'] = 60  # 75%
-                # root.update()
-                # time.sleep(0.03)
-
                 progress_bar['value'] = 100  # 100%
                 root.update()
 
@@ -307,6 +299,7 @@ def uploadLx02(root, contenedor_botones):
 
             # Asegurar que los encabezados sean strings y eliminar espacios en blanco
             df.columns = df.columns.map(lambda x: str(x).strip())
+
             # Limpiar encabezados (reemplazar saltos de línea y quitar espacios)
             df.columns = df.columns.str.replace('\n', ' ')  # Reemplazar saltos de línea con espacio
             df.columns = df.columns.str.strip()  # Eliminar espacios al inicio y final
@@ -915,12 +908,12 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
     
     # Extraer los encabezadois con formato de fecha
     dateHeaders = getDateHeaders(besiDf)
+    totalDateHeaders = len(dateHeaders)
 
     # Definición de encabezados estáticos
     staticHeaders = [
         "NP SAS", "NP VW", "Description", "Supplier", "Planner", 
-        "Origin", "Stock On Hand In Plant", "Days On Hand In Plant", 
-        "DOH", "Politica  VWM"
+        "Origin","Tipo de almacenamiento", "Stock On Hand In Plant","DOH", "Stock On Hand In Plant 921", "Days On Hand In Plant", "Dr", "DOH Total", "Politica  VWM"
     ]
     # Se guarda el número de encabezados
     headersLen = len(staticHeaders)
@@ -997,8 +990,16 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
             # Asignar tipo de almacenamiento
             storageType = row['Tipo de almacenamiento']
 
+            stockOnHandInPlant921 = 0
+
             if storageType == 'rack':
+                
+                lx02Filtered921 = lx02Filtered[lx02Filtered['Tipo almacén'] == 921].copy()
+
                 lx02Filtered = lx02Filtered[lx02Filtered['Tipo almacén'] != 921]
+
+                # Cálcular el inventario existente
+                stockOnHandInPlant921 = sum(lx02Filtered921['Stock disponible'].to_list())
 
             # Cálcular el inventario existente
             stockOnHandInPlant = sum(lx02Filtered['Stock disponible'].to_list())
@@ -1013,7 +1014,9 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
                 "Supplier":supplier,
                 "Planner":planner,
                 "Origin":origin,
+                "Tipo de almacenamiento":storageType,
                 "Stock On Hand In Plant":stockOnHandInPlant,
+                "Stock On Hand In Plant 921":stockOnHandInPlant921,
                 "Politica  VWM":vwPolicy,
             }
 
@@ -1045,14 +1048,19 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
 
                 newRow[dohHeader] = doh
             
-                newRow['DOH'] = round(doh, 2)
-                newRow['Days On Hand In Plant'] = round(doh, 2)
+            requerimentAverage = sumRequeriment / totalDateHeaders
+            newRow['Dr'] = requerimentAverage
+            newRow['DOH'] = round(doh, 2)
+            newRow['Days On Hand In Plant'] = round(doh, 2)
             
             progress_bar['value'] = progress_bar['value'] + loadStep
             root.update()
             time.sleep(0.03)
 
             if sumRequeriment > 0:
+                
+                newRow['DOH total'] = (newRow["Stock On Hand In Plant"] + newRow["Stock On Hand In Plant 921"]) / requerimentAverage
+
                 filas.append(newRow)
 
         report2Df = pd.concat([report2Df, pd.DataFrame(filas)], ignore_index=True)
@@ -1073,8 +1081,8 @@ def calculateReport2(root, contenedor_botones, besiDf, lx02Df, mDataDf):
 #-----------------------------------------------------------------------------------------
 def calculateCritics(dohDf, besiDf):
     critic_headers = [
-        'NP SAS', 'Description', 'Supplier', 'Planner', 'Origin',	
-        'Stock On Hand In Plant', 'Days On Hand In Plant', 'Politica  VWM'
+        'NP SAS', 'Description', 'Supplier', 'Planner', 'Origin','Tipo de almacenamiento',	
+        'Stock On Hand In Plant','DOH' ,'Stock On Hand In Plant 921','Dr','DOH total','Politica  VWM'
     ]
 
     # Filtrar las columnas deseadas y hacer una copia explícita
@@ -1085,8 +1093,8 @@ def calculateCritics(dohDf, besiDf):
     test2Origins = ['FRONTERA', 'LOCAL', 'NACIONAL', 'USA']
 
     # Crear las condiciones
-    test1 = (criticDf['Origin'].str.upper().isin(test1Origins)) & (criticDf['Days On Hand In Plant'] < 7)
-    test2 = (criticDf['Origin'].str.upper().isin(test2Origins)) & (criticDf['Days On Hand In Plant'] < 1)
+    test1 = (criticDf['Origin'].str.upper().isin(test1Origins)) & (criticDf['DOH'] < 7)
+    test2 = (criticDf['Origin'].str.upper().isin(test2Origins)) & (criticDf['DOH'] < 1)
 
     # Asignar las condiciones al DataFrame
     criticDf.loc[:, 'test1'] = test1
@@ -1116,9 +1124,6 @@ def calculateCritics(dohDf, besiDf):
 
         sasPartNumber = row['NP SAS']
         vwPartNumber = sasPartNumber.replace('\xa0', '').strip().replace(' ','').strip()
-
-        print({sasPartNumber,vwPartNumber})
-
         filteredBesi = besiDf[besiDf['Noparte'] == vwPartNumber].copy()
 
         platforms = filteredBesi[['TME']].copy()

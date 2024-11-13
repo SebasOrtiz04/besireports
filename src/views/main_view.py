@@ -2,10 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import pandas as pd
 
-
-from data.paths import ICON_PATH, REPORT_NAME_2
-from data.index import platforms
-from utils.main import uploadBesi, uploadBom, calculateReport, exportPdfReport, uploadLx02, calculateReport2, uploadMData, exportReport, calculateReport3
+from config import platforms, ICON_PATH, REPORT_NAME_2
+from controllers.main_controller import uploadBesi, uploadBom, calculateReport, exportPdfReport, uploadLx02, calculateReport2, uploadMData, exportReport, calculateReport3
 
 # Etiquetas para mostrar el número de filas en cada pestaña
 row_count_label_besi = None

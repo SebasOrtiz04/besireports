@@ -1,7 +1,10 @@
-from gui import createGui
+from views.main_view import createGui
 
-def main():
+def __main__():
+    
     createGui()
 
+    return None
+
 if __name__ == '__main__':
-    main()
+    __main__()
